@@ -1,0 +1,35 @@
+# This config uses industrial_ci (https://github.com/ros-industrial/industrial_ci.git).
+# For troubleshooting, see readme (https://github.com/ros-industrial/industrial_ci/blob/master/README.rst)
+
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        env:
+          - {ROS_DISTRO: rolling, ROS_REPO: testing}
+          - {ROS_DISTRO: rolling, ROS_REPO: main}
+          - {ROS_DISTRO: humble, ROS_REPO: main}
+          - {ROS_DISTRO: humble, ROS_REPO: testing}
+          - {ROS_DISTRO: galactic, ROS_REPO: main}
+          - {ROS_DISTRO: galactic, ROS_REPO: testing}
+    env:
+      TARGET_CMAKE_ARGS: >
+        -DENABLE_SANITIZER_ADDRESS=ON
+        -DCMAKE_BUILD_TYPE=Debug
+
+    runs-on: ubuntu-latest
+    name: ${{ matrix.env.ROS_DISTRO }}-${{ matrix.env.ROS_REPO }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{matrix.env}}
